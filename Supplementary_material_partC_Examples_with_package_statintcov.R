@@ -1,10 +1,14 @@
 
-# Illustarting the use of package statint (which relies on packages 
-# mvtnorm, multcomp, mratios, ggplot2) for reproducing the three CSae studies.
+# Illustrating the use of package statint (which relies on packages 
+# mvtnorm, multcomp, mratios, ggplot2) for reproducing the three examples.
 # Packages MASS to load the data of Example 4.1 and package drc to load
 # the data of Example 4.3.
 
 library("ggplot2")
+library("multcomp")
+library("mratios")
+library("MASS")
+library("drc")
 
 # Installation of package statintcov
 # from GitHub, using the package devtools:
@@ -21,8 +25,8 @@ library("statintcov")
 ###############################################
 
 # load data from package MASS:
-library("MASS")
-data(anorexia)
+
+data(anorexia, package="MASS")
 AN <- anorexia
 
 fitAN <- lm(Postwt ~ Treat*Prewt, data=AN)
@@ -43,7 +47,7 @@ lnfctpredAN
 scipredAN <- confint(glht(fitAN, linfct=lnfctpredAN))
 dscipredAN <- cbind(dpredAN, scipredAN$confint)
 
-# Reproducing Figure 1:
+# Reproducing Figure 4:
 
 ggplot(data=AN, aes(y=Postwt, x=Prewt)) + geom_point() +  facet_grid(.~Treat) +
   geom_errorbar(data=dscipredAN, aes(y=Estimate, ymin=lwr, ymax=upr), colour="darkgrey", width=1) +
@@ -60,7 +64,7 @@ dsciAN <- scitreatcov(response="Postwt", treatment="Treat", covariate="Prewt", d
 str(dsciAN, max.level=1)
 str(dsciAN$sci)
 
-# Reproducing Figure 2:
+# Reproducing Figure 5:
 
  ggplot(dsciAN$sci, aes(x=covariate, y=Estimate, ymin=lwr, ymax=upr)) + 
  geom_errorbar(width=1) + geom_line() + geom_point(shape=15) +
@@ -101,7 +105,7 @@ str(cmPC$linfct)
 
 sciPC <- confint(glht(fitPC, linfct=cmPC$linfct))
 
-# Plot corresponding to Figure 5:
+# Plot corresponding to Figure 8:
 # For plotting: write the comparsions and covariate values in a data.frame
 # together with the confidence interavls from glht
 
@@ -124,6 +128,7 @@ str(cmrPC, max.level=1)
 # and define the numerators and denominators of the matrices of
 # interest
 
+
 scirPC <- gsci.ratio(est = coef(fitPC), vcmat = vcov(fitPC),
   degfree=fitPC$df.residual, Num.Contrast=cmrPC$numC,
   Den.Contrast=cmrPC$denC, adjusted = TRUE)
@@ -132,10 +137,12 @@ scirPC
 
 dscirPC <- cbind(cmrPC$dataratio, scirPC$estimate, scirPC$conf.int)
 
+# Figure 9:
+
 ggplot(dscirPC, aes(x=x, y=estimate, ymin=lower, ymax=upper)) +
  geom_errorbar(width=1) + geom_line() + geom_point(shape=15) + 
  facet_grid(.~comparison) + xlab("Compound x") + 
- ylab("Ratio in expected yields") + geom_hline(yintercept=0)
+ ylab("Ratio in expected yields") + geom_hline(yintercept=1)
 
 
 
@@ -145,8 +152,7 @@ ggplot(dscirPC, aes(x=x, y=estimate, ymin=lower, ymax=upper)) +
 # binomial generalized linear model with logit link  #
 ######################################################
 
-library("drc")
-data(selenium)
+data(selenium, package="drc")
 
 SE <- subset(selenium, conc!=0)
 SE$typef <- factor(SE$type)
@@ -186,7 +192,7 @@ sciSE <- confint(glht(fitSE, linfct=cmSE$linfct))
 
 dsciSE <- cbind(cmSE$datadiff, sciSE$confint)
 
-# Plot corresponding to Figure 8)
+# Plot corresponding to Figure 11)
 
 ggplot(dsciSE, aes(x=l10conc, y=exp(Estimate), ymin=exp(lwr), ymax=exp(upr))) +
 geom_errorbar(width=0.1) + geom_line() + geom_point(shape=15) +
